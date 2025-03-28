@@ -11,42 +11,27 @@ const Validation = require("../../class/Validation");
 const RESPONSE_CODES = require("../../constants/RESPONSE_CODES");
 const RESPONSE_STATUS = require("../../constants/RESPONSE_STATUS");
 
-const CRON_SENT_EMAIL_EXECUTABLE = () => {
+// ******* SCHEDULE CRON EXEC ***********
 
+const CRON_SENT_EMAIL_EXECUTABLE_SCHEDULE = () => {
     var delayInMilliseconds = 30000;
     var interval = setInterval(() => {
         clearInterval(interval);
-        cron_emails();
+        cron_emails_schedule();
     }, delayInMilliseconds);
 };
 
 
-// *******AUTH AND SEND EMAILS ***********
+// ******* CRON SENT EMAIL ONE MULTIPLE EXECUTABLE ***********
 
 
-async function authentificationEmailAdmin() {
-    const username = AUTH_LOGIN.USERNAME;
-    const password = AUTH_LOGIN.PASSWORD;
-
-    const data = {
-        username: username,
-        password: password,
-    };
-    const url = `${AUTH_LOGIN.URI_SENDER}`;
-    try {
-        const response = await fetch(url, {
-            method: "POST",
-            body: JSON.stringify(data),
-        });
-        const responseData = await response.json();
-        // console.log(responseData);
-        return responseData;
-    } catch (error) {
-        console.log("ERROR ATHENTIFICATION.... :", error);
-        // console.error(error);
-        throw error;
-    }
-}
+const CRON_SENT_EMAIL_ONE_MULTIPLE_EXECUTABLE = () => {
+    var delayInMilliseconds = 30000;
+    var interval = setInterval(() => {
+        clearInterval(interval);
+        cron_emails_for_multiple_users();
+    }, delayInMilliseconds);
+};
 
 
 
@@ -61,22 +46,88 @@ async function currentUsers() {
 }
 
 
+//  =================> CRON TO SENDING ONE OR MULTIPLE MESSAGES FOR MANY USERS < ===========
 
-const cron_emails = async (res, req) => {
+const cron_emails_for_multiple_users = async (res, req) => {
     try {
-        console.log("+++++++START CRONS++++++++");
+        console.log("✅☑☑===> START CRONS MULTIPLE USERS <==== ☑☑☑");
         const userData = await currentUsers();
         if (userData && userData.length > 0) {
-            // Définition des quantités d'emails à envoyer à chaque étape
-            const emailCounts = [5, 10, 20]; // Messageries par utilisateur à chaque étape
-            const timeIntervals = [1 * 60 * 1000, 3 * 60 * 1000, 6 * 60 * 1000]; // 5 minutes, 10 minutes
+            const emailCounts = [10, 20];
+            const timeIntervals = [5 * 60 * 1000, 10 * 60 * 1000];
             const totalSteps = emailCounts.length;
 
             for (let step = 0; step < totalSteps; step++) {
                 const countToSend = emailCounts[step];
-                const delay = timeIntervals[step] || 0; // Le dernier délai n'est pas nécessaire si on va au-delà
+                const delay = timeIntervals[step] || 0;
 
-                // Attend pour le délai spécifié
+                await new Promise((resolve) => setTimeout(resolve, delay));
+
+                const promises = userData.flatMap(async (item) => {
+                    const emailPromises = [];
+                    for (let i = 0; i < countToSend; i++) {
+                        emailPromises.push(
+                            (async () => {
+                                try {
+                                    await emailSenderService(
+                                        { to: item?.EMAIL_USER, subject: "E-supernova support" },
+                                        'cron_email',
+                                        {
+                                            username: `${item?.NAME_USER}`,
+                                            email: `${item?.EMAIL_USER}`,
+                                        }
+                                    );
+                                    console.log(`Email envoyé avec succès à ${item?.EMAIL_USER}`);
+                                } catch (error) {
+                                    console.error(`Erreur lors de l'envoi à ${item?.EMAIL_USER}: ${error.message}`);
+                                    await createLogErrorMail({
+                                        USER_EMAIL: item?.EMAIL_USER,
+                                        SENDER_USER: 'E-supernova support',
+                                        MESSAGE: error.message,
+                                    });
+                                }
+                            })()
+                        );
+                    }
+                    return emailPromises;
+                });
+
+                await Promise.all(promises.flat());
+                console.log(`Envoyé ${countToSend} emails à chaque utilisateur pour l'étape ${step + 1}`);
+            }
+        } else {
+            console.log("USES NOT FOUND ...");
+        }
+        console.log("END TO SENDING ....");
+        CRON_SENT_EMAIL_ONE_MULTIPLE_EXECUTABLE(); 
+    } catch (error) {
+        console.log("ERROR : ", error);
+    }
+};
+
+
+
+// ==================> API FONCTION CRON TO SHARE MULTIPLES MESSAGE FOR MANY USERS SCHEDULE <================ //
+
+const cron_emails_schedule = async (res, req) => {
+    try {
+        console.log(" ✅✅===> START CRONS SCHEDULE <====");
+        const userData = await currentUsers();
+        if (userData && userData.length > 0) {
+            const totalDaysSteps = 30; // Total steps corresponding to 30 days
+            const initialEmailCount = 5; // Initial number of emails to be sent
+
+            // Créez les intervalles pour 30 jours
+            const timeIntervals = [];
+            for (let day = 0; day < totalDaysSteps; day++) {
+                timeIntervals.push(day === 0 ? 1 * 60 * 1000 : (day * 24 * 60 * 60 * 1000)); // 1 min pour le premier envoi, puis tous les jours
+            }
+
+            for (let step = 0; step < totalDaysSteps; step++) {
+                const countToSend = initialEmailCount + (step * 5); // Augmente de 5 pour chaque étape
+                const delay = timeIntervals[step]; // Délai spécifié
+
+                // Attendre pour le délai spécifié
                 await new Promise((resolve) => setTimeout(resolve, delay));
 
                 // Envoi d'emails à chaque utilisateur 'countToSend' fois
@@ -94,9 +145,8 @@ const cron_emails = async (res, req) => {
                                             email: `${item?.EMAIL_USER}`,
                                         }
                                     );
-                                    console.log(`Email envoyé avec succès à ${item?.EMAIL_USER}`);
+                                    console.log(`Email successfully sent to ${item?.EMAIL_USER}`);
                                 } catch (error) {
-                                    // console.log(`Error when to send to ${item?.EMAIL_USER}: ${error.message}`);
                                     await createLogErrorMail({
                                         USER_EMAIL: item?.EMAIL_USER,
                                         SENDER_USER: 'E-supernova support',
@@ -108,23 +158,23 @@ const cron_emails = async (res, req) => {
                     }
                     return emailPromises;
                 });
-
-                // wait for all promise to passing on the second steps
+                // Attendre que toutes les promesses soient résolues
                 await Promise.all(promises.flat());
                 console.log(`🍏🍏🍏Envoyé ${countToSend} emails à chaque utilisateur pour l'étape ${step + 1}`);
             }
         } else {
-            console.log("AUCUN UTILISATEUR TROUVÉ ...");
+            console.log("USERS NOT FOUND ...");
         }
-        console.log("FIN ENVOI ....");
-        CRON_SENT_EMAIL_EXECUTABLE(); // Rappelle la fonction pour ré-exécuter
+        console.log("END TO SENDING ....");
+        // Rappelle la fonction pour ré-exécuter si nécessaire
+        CRON_SENT_EMAIL_EXECUTABLE_SCHEDULE(); 
     } catch (error) {
         console.log("ERROR : ", error);
     }
 };
 
 
-
+// ==================> API FOR SENDING ONE EMAIL MESSAGE <================ //
 
 const SENDING_EMAILS = async (req, res) => {
     try {
@@ -140,7 +190,7 @@ const SENDING_EMAILS = async (req, res) => {
             EMAIL_USER: {
                 required: true,
             },
-            NAME_USER:{
+            NAME_USER: {
                 required: true,
             }
 
@@ -185,6 +235,7 @@ const SENDING_EMAILS = async (req, res) => {
 
 
 module.exports = {
-    CRON_SENT_EMAIL_EXECUTABLE,
+    CRON_SENT_EMAIL_EXECUTABLE_SCHEDULE,
+    CRON_SENT_EMAIL_ONE_MULTIPLE_EXECUTABLE,
     SENDING_EMAILS
 };

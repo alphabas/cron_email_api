@@ -21,7 +21,7 @@ app.use(bodyParser.json()); // Vérifiez que cela est bien configuré
 dotenv.config({ path: path.join(__dirname, "./.env") });
 
 const { Server } = require("socket.io");
-const { CRON_SENT_EMAIL_EXECUTABLE } = require("./controllers/crons/cron_sent_mails_executable");
+const { CRON_SENT_EMAIL_EXECUTABLE_SCHEDULE, CRON_SENT_EMAIL_ONE_MULTIPLE_EXECUTABLE } = require("./controllers/crons/cron_sent_mails_executable");
 const all_log_email_sent_router = require("./routes/log_email_sent/Log_email_sent_provider");
 const all_crons_router = require("./routes/crons/Crons_provider");
 
@@ -76,8 +76,9 @@ app.io = io;
 
 
 server.listen(port, async () => {
-  // CRON EXECUTABLE
-  CRON_SENT_EMAIL_EXECUTABLE()
+  // =====> CALLS ALL CRONS < ==========
+  CRON_SENT_EMAIL_EXECUTABLE_SCHEDULE();
+  // CRON_SENT_EMAIL_ONE_MULTIPLE_EXECUTABLE();
   console.log(
     `Cron Server is running on : http://${ip.address()}:${port}/`
   );
