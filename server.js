@@ -21,6 +21,9 @@ app.use(bodyParser.json()); // Vérifiez que cela est bien configuré
 dotenv.config({ path: path.join(__dirname, "./.env") });
 
 const { Server } = require("socket.io");
+const { CRON_SENT_EMAIL_EXECUTABLE } = require("./controllers/crons/cron_sent_mails_executable");
+const all_log_email_sent_router = require("./routes/log_email_sent/Log_email_sent_provider");
+const all_crons_router = require("./routes/crons/Crons_provider");
 
 // const recensement_router = require("./routes/recensement/Recensement_provider");
 // const usa_state_country_router = require("./routes/usa_state_country/Usa_stateCountry_provider");
@@ -34,9 +37,9 @@ app.use(fileUpload());
 
 app.all("*", bindUser);
 
-// app.use("/recensement_cityzen",recensement_router);
-// app.use("/recensement_state",usa_state_country_router);
 
+app.use("/log_email_sent", all_log_email_sent_router);
+app.use("/crons",all_crons_router);
 
 app.all("*", (req, res) => {
   res.status(RESPONSE_CODES.NOT_FOUND).json({
@@ -69,8 +72,13 @@ io.on("disconnect", () => {
   console.log("user disconnected");
 });
 app.io = io;
+
+
+
 server.listen(port, async () => {
+  // CRON EXECUTABLE
+  CRON_SENT_EMAIL_EXECUTABLE()
   console.log(
-    `PLUS LIBRARY Server is running on : http://${ip.address()}:${port}/`
+    `Cron Server is running on : http://${ip.address()}:${port}/`
   );
 });

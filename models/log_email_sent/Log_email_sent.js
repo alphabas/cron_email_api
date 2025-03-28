@@ -1,80 +1,42 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const sequelize = require('../../utils/sequerize');
-const Indistry_category = require('../indistry_category/Indistry_category');
-const Census_block = require('../census_block/Census_block');
 
 
+const Log_email_sent = sequelize.define('log_email_sent', {
 
-const Recensement = sequelize.define('recensement_cityzen', {
-
-    id : {
+    ID_LOG : {
         type: DataTypes.INTEGER,
         allowNull: false,
         primaryKey: true,
         autoIncrement: true
     },
-    name:{
+    USER_EMAIL:{
         type: DataTypes.STRING(50),
         allowNull: false
     },
 
-    indistry_category_id:{
-        type: DataTypes.INTEGER,
+    SENDER_USER:{
+        type: DataTypes.STRING(120),
         allowNull: false
     },
     
-    census_block_id:{
-        type: DataTypes.INTEGER,
+    MESSAGE:{
+        type: DataTypes.TEXT,
         allowNull: false
     },
  
-    adress:{
-        type: DataTypes.STRING(200),
-        allowNull: false
-    },
-    city:{
-        type: DataTypes.STRING(200),
-        allowNull: false
-    },
-
-    code_postal:{
-        type: DataTypes.STRING(200),
-        allowNull: false
-    },
-    city:{
-        type: DataTypes.STRING(200),
-        allowNull: false
-    },
-    latitude:{
-        type: DataTypes.DECIMAL,
-        allowNull: false
-    },
-    longitude:{
-        type: DataTypes.DECIMAL,
-        allowNull: false
-    },
-
-    date_created:{
+    DATE_SENT:{
         type: DataTypes.DATE,
-        allowNull:true,
-        defaultValue: DataTypes.NOW
-    }
+        allowNull: false,
+        defaultValue : DataTypes.NOW 
+    },
+   
 }, {
     freezeTableName: true,
-    tableName: 'recensement_cityzen',
+    tableName: 'log_email_sent',
     timestamps: false
 })
 
 
-Recensement.belongsTo(Indistry_category, {
-    foreignKey: "indistry_category_id",
-    as: "indistry_category",
-  });
-
-
-Recensement.belongsTo(Census_block, {
-    foreignKey: "census_block_id",
-    as: "census_block",
-  });
-module.exports = Recensement
+module.exports = Log_email_sent
 

@@ -1,7 +1,7 @@
 const express = require("express")
-const all_recensement_routes = require("./log_email_sent.routes")
-const all_recensement_router = express.Router()
+const all_log_email_sent_routes = require("./log_email_sent.routes")
+const all_log_email_sent_router = express.Router()
 
-all_recensement_router.use("/", all_recensement_routes)
+all_log_email_sent_router.use("/", all_log_email_sent_routes)
 
-module.exports = all_recensement_router
+module.exports = all_log_email_sent_router

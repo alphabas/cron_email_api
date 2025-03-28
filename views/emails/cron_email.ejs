@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+          <title>How can i testing my cron Your Data</title>
+          <style>
+                    body {
+                              font-family: Arial, sans-serif;
+                              display: flex;
+                              flex-direction: column;
+                              align-items: center;
+                              justify-content: center;
+                              height: 100vh;
+                              margin: 0;
+                              padding: 0;
+                    }
+
+                    .container {
+                              max-width: 800px;
+                              width: 100%;
+                              padding: 0 20px;
+                              box-sizing: border-box;
+                    }
+
+                    h1,
+                    h2 {
+                              color: #333;
+                    }
+
+                    ul {
+                              margin: 0;
+                              padding: 0;
+                              list-style-type: none;
+                    }
+
+                    li {
+                              margin-bottom: 10px;
+                    }
+
+                    @media (max-width: 600px) {
+
+                              h1,
+                              h2 {
+                                        font-size: 18px;
+                              }
+
+                              p,
+                              li {
+                                        font-size: 16px;
+                              }
+                    }
+                    header {
+                              display: flex;
+                              align-items: center;
+                              box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.1);
+                              padding: 15px 0;
+                    }
+                    img {
+                              width: 50px;
+                              height: 50px;
+                              border-radius: 10px;
+                    }
+                    .brand {
+                              margin-left: 10px;
+                    }
+                    .brandTitle {
+                              font-size: 20px;
+                              font-weight: bold;
+                    }
+                    .brandSubTitle {
+                              color: #777;
+                              margin-top: 5px;
+                              font-size: 13px;
+                    }
+          </style>
+</head>
+
+<body>
+          <div class="container">
+                    <header>
+                              <img src="/images/driver-icon.png" alt="" class="logo">
+                              <div class="brand">
+                                        <div class="brandTitle">E-SUPERNOVA-AI</div>
+                                        <div class="brandSubTitle">Support Cron Email</div>
+                              </div>
+                    </header>
+                    <h1>Want to Delete Your Data</h1>
+                    <p>If you wish to delete your data, you can do so by following the steps below:</p>
+                    <h2>Automated Method</h2>
+                    <p>Your request will be sumited to our administration and we will contact you for feedback:</p>
+                    <p><a href="#" id="sendBtn">Send Data Deletion Request</a>
+                    </p>
+                    <h2>Manual Method</h2>
+                    <p>Follow these steps to delete your data manually:</p>
+                    <ul>
+                              <li>Step 1: Log in to your account via <b>Testing Cron E-SUPERNOVA -AI</b> APP</li>
+                              <li>Step 2: Go to settings</li>
+                              <li>Step 3: Scroll down to "Data deletion request".</li>
+                              <li>Step 4: Wait for administration feedback</li>
+                    </ul>
+          </div>
+          <script>
+                    const sendBtn = document.querySelector("#sendBtn")
+                    sendBtn.addEventListener("click", e => {
+                              e.preventDefault()
+                              const result = prompt("Please enter a testing data")
+                              if(result) {
+                                        alert(`Your request for data deletion of your testing is (${result}) at has been submited. We will contact you for feedbakc. Thanks`)
+                              }
+                    })
+          </script>
+</body>
+
+</html>

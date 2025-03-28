@@ -1,11 +1,9 @@
 const express = require("express");
-const Recensement_controller = require("../../controllers/recensement/recensement.controller");
-const recensement_routes = express.Router();
+const Log_email_sent_controller = require("../../controllers/log_email_sent/log_email_sent.controller");
+const log_email_sent_routes = express.Router();
 
 
-recensement_routes.get("/all", Recensement_controller.findAll);
-recensement_routes.get("/generate_query", Recensement_controller.generateQueries);
-recensement_routes.post("/delete", Recensement_controller.deleteItems);
+log_email_sent_routes.get("/all", Log_email_sent_controller.findAll);
 
 
-module.exports = recensement_routes;
+module.exports = log_email_sent_routes;

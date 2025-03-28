@@ -1,27 +1,23 @@
 const express = require("express");
-const Recensement = require("../../models/recensement/Recensement");
 const { Op } = require("sequelize");
 const RESPONSE_CODES = require("../../constants/RESPONSE_CODES");
 const RESPONSE_STATUS = require("../../constants/RESPONSE_STATUS");
-const censusService = require('../../services/censusService');
-const industryService = require('../../services/industryService');
-const Census_block = require("../../models/census_block/Census_block");
-const Indistry_category = require("../../models/indistry_category/Indistry_category");
+const Log_email_sent = require("../../models/log_email_sent/Log_email_sent");
 
 const findAll = async (req, res) => {
   try {
-    const { rows = 10, first = 0, sortField, sortOrder, search, latitude, longitude } = req.query;
+    const { rows = 10, first = 0, sortField, sortOrder, search, } = req.query;
 
-    const defaultSortField = "name";
+    const defaultSortField = "USER_EMAIL";
     const defaultSortDirection = "ASC";
     const sortColumns = {
-      recensement: {
-        as: "recensement",
+      log_email_sent: {
+        as: "log_email_sent",
         fields: {
-          id: "id",
-          name: "name",
-          adress: "adress",
-          date_created: "date_created",
+          ID_LOG: "ID_LOG",
+          USER_EMAIL: "USER_EMAIL",
+          SENDER_USER: "SENDER_USER",
+          DATE_SENT: "DATE_SENT",
         },
       },
 
@@ -44,10 +40,10 @@ const findAll = async (req, res) => {
       }
     }
     if (!orderColumn || !sortModel) {
-      orderColumn = sortColumns.recensement.fields.id;
+      orderColumn = sortColumns.log_email_sent.fields.ID_LOG;
       sortModel = {
-        model: "recensement",
-        as: sortColumns.recensement,
+        model: "log_email_sent",
+        as: sortColumns.log_email_sent,
       };
     }
     // ordering
@@ -60,8 +56,7 @@ const findAll = async (req, res) => {
     }
 
 
-    const globalSearchColumns = ["name", "adress", "date_created"];
-    const findLatLong = ["latitude", "longitude"];
+    const globalSearchColumns = ["SENDER_USER", "USER_EMAIL", "DATE_SENT"];
 
     var globalSearchWhereLike = {};
     if (search && search.trim() != "") {
@@ -76,58 +71,22 @@ const findAll = async (req, res) => {
       };
     }
 
-    var filterDensity = {}
-    var filterLat = {}
-    var filterLong = {}
 
-    if (latitude && latitude.trim() != "") {
-      filterLat = {
-        latitude : {[Op.substring]: latitude},
-      };
-    }
-
-    if (longitude && longitude.trim() != "") {
-      filterLong = {
-        longitude : {[Op.substring]: longitude},
-      };
-    }
-
-    // filterDensity = {
-    //   "$census_block.population_density$": { [Op.gt]: 100 },
-    // }
-
-    const result = await Recensement.findAndCountAll({
+    const result = await Log_email_sent.findAndCountAll({
       limit: parseInt(rows),
       offset: parseInt(first),
       order: [[sortModel, orderColumn, orderDirection]],
       where: {
         ...globalSearchWhereLike,
-        ...filterDensity,
-        ...filterLat,
-        ...filterLong
+      
       },
-      include: [
-        {
-          model: Census_block,
-          as: "census_block",
-          required: false,
-          attributes: ["id_census", "name_census", "population_density"]
-        },
-        {
-          model: Indistry_category,
-          as: "indistry_category",
-          required: false,
-          attributes: ["id_indistry_category", "name_indistry_category"]
-        }
-      ],
-      group: ['recensement_cityzen.name'], 
-      distinct: true
+ 
     });
 
     res.status(RESPONSE_CODES.OK).json({
       statusCode: RESPONSE_CODES.OK,
       httpStatus: RESPONSE_STATUS.OK,
-      message: "List request",
+      message: "List for error mails",
       result: {
         data: result.rows,
         totalRecords: result.count,
@@ -145,66 +104,25 @@ const findAll = async (req, res) => {
 
 
 
-const deleteItems = async (req, res) => {
+const createLogErrorMail = async (currentData) => {
   try {
-    const { ids } = req.body;
-    const id = JSON.parse(ids);
+    const { USER_EMAIL, SENDER_USER, MESSAGE } = currentData;
 
-
-
-    await Recensement.destroy({
-      where: {
-        id
-      },
+    const logItems = await Log_email_sent.create({
+      USER_EMAIL,
+      SENDER_USER,
+      MESSAGE,
     });
 
-    res.status(RESPONSE_CODES.OK).json({
-      statusCode: RESPONSE_CODES.OK,
-      httpStatus: RESPONSE_STATUS.OK,
-      message: "Data deleted Successfully",
-    });
+    return logItems;
   } catch (error) {
-    console.log(error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({
-      statusCode: RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-      httpStatus: RESPONSE_STATUS.INTERNAL_SERVER_ERROR,
-      message: "Erreur interne du serveur, réessayer plus tard",
-    });
+    console.error(error);
+    throw new Error("ERROR LOG...");
   }
 };
 
 
-const generateQueries = async (req, res) => {
-  try {
-    const blocks = await censusService.filterCensusBlocks();
-    const categories = await industryService.getRelevantIndustryCategories();
-
-    const queries = [];
-    for (const block of blocks) {
-      for (const category of categories) {
-        queries.push({ "block_name": block.name_census, "category_name": category.name_indistry_category });
-      }
-    }
-    res.status(RESPONSE_CODES.OK).json({
-      statusCode: RESPONSE_CODES.OK,
-      httpStatus: RESPONSE_STATUS.OK,
-      message: "Categorie query generated, 100 density pop and 5000 category get",
-      result: queries,
-    });
-    // res.json(queries); 
-  } catch (error) {
-    console.log(error);
-    res.status(RESPONSE_CODES.INTERNAL_SERVER_ERROR).json({
-      statusCode: RESPONSE_CODES.INTERNAL_SERVER_ERROR,
-      httpStatus: RESPONSE_STATUS.INTERNAL_SERVER_ERROR,
-      message: "Server Error Intern , Try again later",
-    });
-    // res.status(500).send('Erreur lors de la génération des requêtes');
-  }
-}
-
 module.exports = {
-  deleteItems,
   findAll,
-  generateQueries
+  createLogErrorMail
 };
